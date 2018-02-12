@@ -29,6 +29,7 @@ var Readline = SerialPort.parsers.Readline; // read serial data as lines
 //-- Addition:
 var NodeWebcam = require( "node-webcam" );// load the webcam module
 
+
 //---------------------- WEBAPP SERVER SETUP ---------------------------------//
 // use express to create the simple webapp
 app.use(express.static('public')); // find pages in public directory
@@ -72,6 +73,33 @@ var opts = { //These Options define how the webcam is operated.
     verbose: false
 };
 var Webcam = NodeWebcam.create( opts ); //starting up the webcam
+
+
+//Low quality options
+var opts2 = { //These Options define how the webcam is operated.
+    //Picture related
+    width: 1280, //size
+    height: 720,
+    quality: 1,
+    //Delay to take shot
+    delay: 0,
+    //Save shots in memory
+    saveShots: true,
+    // [jpeg, png] support varies
+    // Webcam.OutputTypes
+    output: "jpeg",
+    //Which camera to use
+    //Use Webcam.list() for results
+    //false for default device
+    device: false,
+    // [location, buffer, base64]
+    // Webcam.CallbackReturnTypes
+    callbackReturn: "location",
+    //Logging
+    verbose: false
+};
+
+
 //----------------------------------------------------------------------------//
 
 
@@ -92,13 +120,14 @@ parser.on('data', function(data) {
   if (data=='dark') {
     var imageName = new Date().toString().replace(/[&\/\\#,+()$~%.'":*?<>{}\s-]/g, '');
 
-    console.log('making a making a picture at'+ imageName); // Second, the name is logged to the console.
+    console.log('making a pixelated picture at'+ imageName); // Second, the name is logged to the console.
 
-    //The picture is  taken and saved to the `public/`` folder
-    NodeWebcam.capture('public/'+imageName, opts, function( err, data ) {
+    //The picture is taken and saved to the `public/`` folder
+    NodeWebcam.capture('public/'+imageName, opts2, function( err, data ) {
     io.emit('newPicture',(imageName+'.jpg')); ///Lastly, the new name is send to the client web browser.
     /// The browser will take this new name and load the picture from the public folder.
     });
+   
   }
 });
 //----------------------------------------------------------------------------//
@@ -127,15 +156,17 @@ io.on('connect', function(socket) {
     /// First, we create a name for the new picture.
     /// The .replace() function removes all special characters from the date.
     /// This way we can use it as the filename.
+
     var imageName = new Date().toString().replace(/[&\/\\#,+()$~%.'":*?<>{}\s-]/g, '');
 
     console.log('making a making a picture at'+ imageName); // Second, the name is logged to the console.
 
-    //Third, the picture is  taken and saved to the `public/`` folder
+    //The picture is  taken and saved to the `public/`` folder
     NodeWebcam.capture('public/'+imageName, opts, function( err, data ) {
     io.emit('newPicture',(imageName+'.jpg')); ///Lastly, the new name is send to the client web browser.
     /// The browser will take this new name and load the picture from the public folder.
   });
+
 
   });
   // if you get the 'disconnect' message, say the user disconnected
